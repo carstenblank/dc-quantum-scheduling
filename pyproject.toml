@@ -13,7 +13,7 @@
 #    limitations under the License.
 [tool.poetry]
 name = "dc-quantum-scheduling"
-version = "0.0.2"
+version = "0.0.3"
 description = ""
 authors = ["Carsten BLank <blank@data-cybernetics.com>"]
 # New attributes

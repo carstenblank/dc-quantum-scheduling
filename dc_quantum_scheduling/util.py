@@ -14,17 +14,16 @@
 import logging
 from typing import Optional
 
-import qiskit
-from qiskit.providers import BaseBackend
+from qiskit.providers.backend import BackendV1
 from qiskit.providers.ibmq import IBMQ
-from qiskit.providers.aer import Aer
+from qiskit_aer import Aer
 from qiskit.providers.basicaer import BasicAer
 
 LOG = logging.getLogger(__name__)
 
 
 def to_backend(backend_provider: str, backend_name: str, hub: Optional[str] = None, group: Optional[str] = None,
-               project: Optional[str] = None) -> Optional[BaseBackend]:
+               project: Optional[str] = None) -> Optional[BackendV1]:
     if backend_provider == type(Aer).__name__ and backend_name in [b.name() for b in Aer.backends()]:
         return Aer.get_backend(backend_name)
     elif backend_provider == type(BasicAer).__name__ and backend_name in [b.name() for b in BasicAer.backends()]:

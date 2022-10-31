@@ -23,13 +23,14 @@ import dateutil.parser
 import dill
 import numpy as np
 import pytz
-from qiskit.ignis.mitigation import CompleteMeasFitter
-from qiskit.providers import BaseBackend, BaseJob, JobStatus
-from qiskit.providers.aer.noise import NoiseModel
-from qiskit.providers.jobstatus import JOB_FINAL_STATES
+from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
+from qiskit.providers.backend import BackendV1
+from qiskit.providers.job import JobV1
 from qiskit.qobj import QasmQobj
 from qiskit.result import Result
 from qiskit.result.models import ExperimentResult
+from qiskit.utils.mitigation import CompleteMeasFitter
+from qiskit_aer.noise import NoiseModel
 
 from .util import to_backend
 
@@ -55,7 +56,7 @@ class BaseExperiment:
                  tags: List[str],
                  qobj_list: List[QasmQobj],
                  arguments: np.array,
-                 transpiler_backend: Optional[BaseBackend],
+                 transpiler_backend: Optional[BackendV1],
                  noise_model: Optional[Dict[datetime.datetime, NoiseModel]] = None,
                  parameters: Optional[dict] = None,
                  callback: 'Optional[Callable[[FinishedExperiment, Optional[CompleteMeasFitter]], Any]]' = None):
@@ -93,7 +94,7 @@ class BaseExperiment:
             raise AssertionError(f"For the parameter {parameter} there are more than one entries found: {results}")
 
     @property
-    def transpiler_backend(self) -> Optional[BaseBackend]:
+    def transpiler_backend(self) -> Optional[BackendV1]:
         return to_backend(
             self.transpiler_backend_provider, self.transpiler_backend_name, hub=self.transpiler_backend_hub,
             group=self.transpiler_backend_group, project=self.transpiler_backend_project
@@ -184,7 +185,7 @@ class BaseExperiment:
 class PreparedExperiment(BaseExperiment):
 
     def __init__(self, external_id: str, tags: List[str], qobj_list: List[QasmQobj], arguments: np.array,
-                 transpiler_backend: Optional[BaseBackend],
+                 transpiler_backend: Optional[BackendV1],
                  noise_model: Optional[Dict[datetime.datetime, NoiseModel]] = None,
                  parameters: Optional[dict] = None,
                  callback: 'Optional[Callable[[FinishedExperiment], np.array]]' = None):
@@ -230,10 +231,10 @@ class RunningExperiment(PreparedExperiment):
     execution_backend_group: Optional[str]
     execution_backend_project: Optional[str]
     execution_backend_name: str
-    job_list: List[BaseJob]
+    job_list: List[JobV1]
 
-    def __init__(self, prepared_experiment: PreparedExperiment, job_list: List[BaseJob],
-                 execution_backend: Optional[BaseBackend] = None):
+    def __init__(self, prepared_experiment: PreparedExperiment, job_list: List[JobV1],
+                 execution_backend: Optional[BackendV1] = None):
         super().__init__(
             prepared_experiment.external_id,
             prepared_experiment.tags,
@@ -290,7 +291,7 @@ class RunningExperiment(PreparedExperiment):
         return self._to_finished_experiment()
 
     @property
-    def execution_backend(self) -> Optional[BaseBackend]:
+    def execution_backend(self) -> Optional[BackendV1]:
         return to_backend(
             self.execution_backend_provider, self.execution_backend_name, hub=self.execution_backend_hub,
             group=self.execution_backend_group, project=self.execution_backend_project

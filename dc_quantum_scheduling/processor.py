@@ -17,9 +17,9 @@ from typing import Optional, Union, Dict
 
 import pytz
 import qiskit
-from qiskit.providers import BaseJob
-from qiskit.providers.aer.backends.aerbackend import AerBackend
-from qiskit.providers.aer.noise import NoiseModel
+from qiskit.providers.job import JobV1
+from qiskit_aer.backends.aerbackend import AerBackend
+from qiskit_aer.noise import NoiseModel
 from qiskit.providers.ibmq import IBMQBackend, IBMQBackendJobLimitError, BackendJobLimit
 from qiskit.providers.ibmq.ibmqbackend import IBMQSimulator
 from qiskit.providers.models import BackendProperties
@@ -50,7 +50,7 @@ def _get_latest_calibration_noise_model(time: datetime, noise_models: Dict[datet
 
 
 def _run_inner_loop(running_experiment: 'RunningExperiment', qobj: Qobj, qobj_index: int,
-                    key: str) -> BaseJob:
+                    key: str) -> JobV1:
 
     backend = running_experiment.execution_backend
 
@@ -65,17 +65,17 @@ def _run_inner_loop(running_experiment: 'RunningExperiment', qobj: Qobj, qobj_in
     LOG.info(f'Starting job for Qobj #{qobj_index} on {backend}...')
     if isinstance(backend, AerBackend):
         noise_model = _get_latest_calibration_noise_model(datetime.now(tz=pytz.utc), running_experiment.noise_model)
-        job: BaseJob = backend.run(qobj=qobj, noise_model=noise_model,
+        job: JobV1 = backend.run(qobj=qobj, noise_model=noise_model,
                                    backend_options=running_experiment.parameters.get('backend_options', None),
                                    validate=running_experiment.parameters.get('validate', False))
     elif isinstance(backend, IBMQSimulator):
         noise_model = _get_latest_calibration_noise_model(datetime.now(tz=pytz.utc), running_experiment.noise_model)
-        job: BaseJob = backend.run(qobj=qobj, job_name=f'{key}--{qobj_index}',
+        job: JobV1 = backend.run(qobj=qobj, job_name=f'{key}--{qobj_index}',
                                    job_tags=running_experiment.tags, validate_qobj=True,
                                    noise_model=noise_model)
     elif isinstance(backend, IBMQBackend):
         try:
-            job: BaseJob = backend.run(qobj=qobj, job_name=f'{key}--{qobj_index}',
+            job: JobV1 = backend.run(qobj=qobj, job_name=f'{key}--{qobj_index}',
                                        job_tags=running_experiment.tags, validate_qobj=True)
         except IBMQBackendJobLimitError:
             LOG.warning(f"We tried to add a job while the job limit was reached. "
